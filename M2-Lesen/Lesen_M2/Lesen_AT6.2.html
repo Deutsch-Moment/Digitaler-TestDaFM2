@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TestDaF Übung – Aussagen einordnen</title>
+<style>
+  :root{
+    --primary:#0e6e8c;
+    --accent:#c8102e;
+    --bg-box:#dde3e8;
+  }
+  *{box-sizing:border-box; font-family: Arial, Helvetica, sans-serif;}
+  body{margin:0; padding:20px; background:#f4f6f7; color:#222;}
+  .header{background:var(--primary); color:#fff; padding:14px 20px; font-size:22px; font-weight:bold; border-radius:4px 4px 0 0;}
+  .instructions{background:#eaf1f4; padding:16px 20px; font-size:15px; line-height:1.5;}
+  .timer{display:inline-block; border:2px solid var(--primary); border-radius:50%; width:70px; height:70px; text-align:center; line-height:70px; font-weight:bold; color:var(--primary); margin-top:10px;}
+  .toolbar{display:flex; justify-content:flex-end; gap:8px; padding:10px 20px 0 20px; background:#fff;}
+  .toolbtn{width:38px; height:38px; border:1px solid var(--primary); background:#fff; color:var(--primary); border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px;}
+  .toolbtn.small{font-size:12px;}
+  .toolbtn.big{font-size:18px;}
+  .toolbtn.active{background:var(--primary); color:#fff;}
+  .main{display:flex; gap:20px; padding:10px 20px 20px 20px; background:#fff;}
+  .textpanel{flex:1.2; max-height:640px; overflow-y:auto; padding-right:10px; border-right:1px solid #ccc; font-size:15px; line-height:1.6;}
+  .textpanel h3{color:var(--primary); margin-top: 0;}
+  .textpanel p{margin-bottom:14px;}
+  .textpanel mark.hl{background:#fdea63; cursor:pointer; border-radius:2px;}
+  .rightpanel{flex:1.3;}
+  .cardgrid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;}
+  .card{background:#e2e8ec; border:1px solid #9ab; border-radius:4px; padding:10px 12px; font-size:15px; cursor:grab; min-height:20px; display:flex; align-items:center;}
+  .card.dragging{opacity:0.4;}
+  .tablebox{border:1px solid #ccc; border-radius:4px; overflow:hidden;}
+  .tablebox .tbtitle{background:#fff; padding:8px 12px; font-weight:bold; font-size:15px; border-bottom:1px solid #ccc;}
+  .tableheader{display:grid; grid-template-columns:1fr 1fr; background:#8f9aa3; color:#fff; font-weight:bold; font-size:14px;}
+  .tableheader div{padding:8px 12px;}
+  .tablerow{display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:8px 10px; background:#f7f9fa;}
+  .slot{min-height:44px; border:2px dashed var(--primary); border-radius:4px; background:#eef3f5; display:flex; align-items:center; padding:4px 8px;}
+  .slot.filled{border-style:solid;}
+  .slot.correct{border-color:green; background:#e3f7e3;}
+  .slot.wrong{border-color:var(--accent); background:#fbe4e7;}
+  .footer{display:flex; justify-content:flex-end; gap:10px; padding:16px 20px;}
+  button.action{background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:4px; font-size:15px; cursor:pointer;}
+  button.action.secondary{background:#888;}
+  #result{padding:0 20px 20px; font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="header">LESEN – Aufgabentyp 6: Aussagen einordnen</div>
+
+<div class="instructions">
+  Lesen Sie den Text.<br>
+  <strong>Entscheiden Sie, welche Aussagen stimmen.</strong> Ziehen Sie die richtigen Aussagen an die passende Stelle in der Tabelle.<br>
+  Es müssen <span id="neededCountText">vier</span> Aussagen zugeordnet werden.
+  <div class="timer" id="timer">07:10</div>
+</div>
+
+<div class="toolbar">
+  <button class="toolbtn small" onclick="changeFontSize(-1)" title="Verkleinern">A-</button>
+  <button class="toolbtn big" onclick="changeFontSize(1)" title="Vergrößern">A+</button>
+  <button class="toolbtn" id="markBtn" onclick="toggleMarking()" title="Markieren">✎</button>
+</div>
+
+<div class="main">
+  <div class="textpanel" id="textpanel"></div>
+  <div class="rightpanel">
+    <div class="cardgrid" id="cardgrid"></div>
+    <div class="tablebox">
+      <div class="tbtitle" id="tableTitle">Zuordnung</div>
+      <div class="tableheader" id="tableHeader"></div>
+      <div id="tableRows"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+
+  <button class="action secondary" onclick="resetExercise()">
+    Zurücksetzen
+  </button>
+
+  <button class="action" onclick="checkAnswers()">
+    Prüfen
+  </button>
+
+  <button class="action" onclick="saveAT6AndGoToNext()">Weiter</button>
+
+</div>
+<div id="result"></div>
+
+<script>
+/* ============================================================
+   HIER ANPASSEN: Titel, Text, Tabellentitel + Spaltennamen,
+   die 8 Aussagen (Buchstaben a-h) und die Lösung: zu welcher
+   Spalte (0 oder 1, entsprechend "columns") jede Aussage gehört.
+   Aussagen ohne Eintrag in "solution" sind Distraktoren.
+   ============================================================ */
+const textTitle = "Warum erinnern wir uns falsch?";
+
+const tableTitle = "Warum erinnern wir uns falsch?";
+
+const columns = ["Ursachen", "Folgen"];
+
+const slotsPerColumn = 2;
+
+const paragraphs = [
+
+"Erinnerungen erscheinen uns normalerweise sehr persönlich und zuverlässig. Wenn wir uns an ein Erlebnis aus der Vergangenheit zurückerinnern, haben wir häufig den Eindruck, eine bereits gespeicherte Information einfach abzurufen. Neurowissenschaftliche und psychologische Untersuchungen zeigen jedoch, dass Erinnern wesentlich komplizierter ist. Eine Erinnerung wird bei jedem Abruf gewissermaßen neu zusammengesetzt und kann dabei durch verschiedene Faktoren beeinflusst werden.",
+
+"Eine besondere Rolle spielen Informationen, die eine Person erst nach einem Ereignis erhält. In einem bekannten Experiment sahen Versuchspersonen einen kurzen Film über einen Verkehrsunfall. Anschließend wurden ihnen Fragen gestellt, die teilweise unterschiedliche Formulierungen für denselben Vorgang enthielten. Später erinnerten sich einige Teilnehmer an Einzelheiten, die im ursprünglichen Film gar nicht zu sehen gewesen waren. Die Forscher vermuten, dass die nachträglich erhaltenen Informationen in die bestehende Erinnerung eingebaut worden waren.",
+
+"Dieser Mechanismus kann auch im Alltag eine Rolle spielen. Wenn mehrere Menschen dasselbe Ereignis beobachten und anschließend darüber sprechen, beeinflussen ihre Beschreibungen möglicherweise gegenseitig die spätere Erinnerung. Das bedeutet allerdings nicht, dass jede Erinnerung nach einem solchen Gespräch automatisch verfälscht wird. Entscheidend sind unter anderem die Art der Information und die Zeit, die zwischen dem ursprünglichen Ereignis und dem späteren Gespräch vergangen ist.",
+
+"Ein anderer Effekt entsteht durch die wiederholte Konfrontation mit einer Information. Was Menschen häufig lesen, hören oder sehen, wird ihnen vertrauter. Diese Vertrautheit kann wiederum dazu führen, dass eine Aussage leichter akzeptiert wird. Problematisch ist dabei, dass Menschen die Leichtigkeit, mit der sie eine Information verarbeiten, unter bestimmten Umständen mit deren tatsächlicher Richtigkeit verwechseln können. Eine häufig wiederholte Behauptung ist deshalb nicht notwendigerweise besser belegt als eine selten erwähnte.",
+
+"Die Forschung beschäftigt sich inzwischen auch damit, welche Rolle Emotionen beim Erinnern spielen. Starke Gefühle können die Aufmerksamkeit auf bestimmte Aspekte eines Ereignisses lenken und dadurch beeinflussen, welche Einzelheiten später verfügbar sind. Daraus lässt sich jedoch nicht ableiten, dass emotional belastende oder besonders aufregende Ereignisse immer besonders genau erinnert werden. Auch hier hängt die Qualität einer Erinnerung von mehreren Bedingungen ab.",
+
+"Insgesamt sprechen die Forschungsergebnisse dafür, Erinnerungen nicht als unveränderliche Aufzeichnungen zu betrachten. Sie sind vielmehr das Ergebnis eines aktiven Prozesses, bei dem Wahrnehmung, spätere Informationen und bereits vorhandenes Wissen miteinander verbunden werden. Gerade deshalb kann eine Person von einer Erinnerung vollkommen überzeugt sein, obwohl einzelne Bestandteile davon erst nach dem eigentlichen Ereignis entstanden sind.",
+
+];
+
+const statements = [
+
+  { letter:"a", text:"Nachträgliche Informationen verändern die Erinnerung." },
+
+  { letter:"b", text:"Menschen vergleichen ihre Erinnerungen miteinander." },
+
+  { letter:"c", text:"Emotionale Ereignisse werden grundsätzlich genauer erinnert." },
+
+  { letter:"d", text:"Widersprüchliche Erinnerungen werden vermieden." },
+
+  { letter:"e", text:"Eine Information wird wiederholt präsentiert." },
+
+  { letter:"f", text:"Einzelheiten können in die ursprüngliche Erinnerung gelangen." },
+
+  { letter:"g", text:"Eine Behauptung kann glaubwürdiger erscheinen." },
+
+  { letter:"h", text:"Emotionen beeinflussen die Wahrnehmung eines Ereignisses." }
+
+];
+
+// Buchstabe -> Spalten-Index
+// 0 = Ursachen, 1 = Folgen
+// Nicht aufgeführte Buchstaben sind Distraktoren.
+
+const solution = {
+
+  a: 0,  // Nachträgliche Informationen verändern die Erinnerung. -> Ursachen
+
+  f: 0,  // Einzelheiten können in die ursprüngliche Erinnerung gelangen. -> Ursachen
+
+  e: 1,  // Eine Information wird wiederholt präsentiert. -> Folgen
+
+  g: 1   // Eine Behauptung kann glaubwürdiger erscheinen. -> Folgen
+
+};
+/* ============================================================ */
+
+let slotContents = {}; // slotId -> statement letter
+let timeLeft = 430;
+let timerInterval;
+let fontSize = 15;
+let markingOn = false;
+
+function buildExercise(){
+  const tp = document.getElementById('textpanel');
+  tp.innerHTML = `<h3>${textTitle}</h3>` + paragraphs.map(p=>`<p>${p}</p>`).join('');
+  tp.onmouseup = handleTextpanelMouseUp;
+  fontSize = 15;
+  tp.style.fontSize = fontSize + 'px';
+  markingOn = false;
+  document.getElementById('markBtn').classList.remove('active');
+
+  document.getElementById('tableTitle').textContent = tableTitle;
+  const header = document.getElementById('tableHeader');
+  header.innerHTML = columns.map(c=>`<div>${c}</div>`).join('');
+
+  const rowsEl = document.getElementById('tableRows');
+  rowsEl.innerHTML = '';
+  slotContents = {};
+  for(let r=0; r<slotsPerColumn; r++){
+    const row = document.createElement('div');
+    row.className = 'tablerow';
+    columns.forEach((c, ci)=>{
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      const slotId = 'target-'+ci+'-'+r;
+      slot.dataset.slot = slotId;
+      slot.ondragover = e=>e.preventDefault();
+      slot.ondrop = e=>onDrop(e, slotId);
+      row.appendChild(slot);
+      slotContents[slotId] = undefined;
+    });
+    rowsEl.appendChild(row);
+  }
+
+  const grid = document.getElementById('cardgrid');
+  grid.innerHTML = '';
+  statements.forEach(s=>{
+    const home = document.createElement('div');
+    home.className = 'slot';
+    home.style.border = '2px dashed #bbb';
+    home.style.background = '#fafafa';
+    const slotId = 'home-'+s.letter;
+    home.dataset.slot = slotId;
+    home.ondragover = e=>e.preventDefault();
+    home.ondrop = e=>onDrop(e, slotId);
+    grid.appendChild(home);
+    slotContents[slotId] = s.letter;
+  });
+  statements.forEach(s=> placeCardInSlot(s.letter, 'home-'+s.letter));
+
+  document.getElementById('result').textContent = '';
+  startTimer();
+}
+
+function makeCard(letter){
+  const s = statements.find(x=>x.letter===letter);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
+  card.dataset.letter = letter;
+  card.textContent = s.text;
+  card.addEventListener('dragstart', e=>{
+    card.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', letter);
+  });
+  card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+  return card;
+}
+
+function findSlotOf(letter){
+  for(const key in slotContents){
+    if(slotContents[key] === letter) return key;
+  }
+  return null;
+}
+
+function placeCardInSlot(letter, slotId){
+  const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
+  if(!slotEl) return;
+  slotEl.innerHTML = '';
+  slotEl.appendChild(makeCard(letter));
+  slotEl.classList.add('filled');
+}
+
+function clearSlot(slotId){
+  const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
+  if(!slotEl) return;
+  slotEl.innerHTML = '';
+  slotEl.classList.remove('filled','correct','wrong');
+}
+
+function onDrop(e, targetSlotId){
+  e.preventDefault();
+  const letter = e.dataTransfer.getData('text/plain');
+  if(!letter) return;
+  const oldSlotId = findSlotOf(letter);
+  if(oldSlotId === targetSlotId) return;
+
+  const occupant = slotContents[targetSlotId];
+  if(occupant !== undefined){
+    slotContents[oldSlotId] = occupant;
+    placeCardInSlot(occupant, oldSlotId);
+  } else {
+    slotContents[oldSlotId] = undefined;
+    clearSlot(oldSlotId);
+  }
+  slotContents[targetSlotId] = letter;
+  placeCardInSlot(letter, targetSlotId);
+}
+
+function saveAT6AndGoToNext(){
+  let score = 0;
+
+  let neededTotal = Object.keys(solution).length;
+
+  columns.forEach((c, ci)=>{
+    for(let r = 0; r < slotsPerColumn; r++){
+
+      const slotId = 'target-' + ci + '-' + r;
+      const letter = slotContents[slotId];
+
+      if(letter === undefined) continue;
+
+      if(solution[letter] === ci){
+        score++;
+      }
+    }
+  });
+
+  localStorage.setItem("Lesen_AT6.2", score);
+
+  window.location.href = "Lesen_AT7.2.html";
+}
+
+function checkAnswers(){
+  clearInterval(timerInterval);
+  let score = 0;
+  let neededTotal = Object.keys(solution).length;
+
+  columns.forEach((c, ci)=>{
+    for(let r=0; r<slotsPerColumn; r++){
+      const slotId = 'target-'+ci+'-'+r;
+      const el = document.querySelector(`[data-slot="${slotId}"]`);
+      el.classList.remove('correct','wrong');
+      const letter = slotContents[slotId];
+      if(letter === undefined) continue;
+      const isCorrect = solution[letter] === ci;
+      el.classList.add(isCorrect ? 'correct' : 'wrong');
+      if(isCorrect) score++;
+    }
+  });
+
+  const resultEl = document.getElementById('result');
+
+  resultEl.style.color = score === neededTotal ? 'green' : 'var(--accent)';
+  resultEl.textContent = `Ergebnis: ${score} von ${neededTotal} richtig zugeordnet.`;
+}
+
+function resetExercise(){
+  clearInterval(timerInterval);
+  timeLeft = 430;
+  buildExercise();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = 430;
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      checkAnswers();
+    }
+  },1000);
+}
+
+function updateTimerDisplay(){
+  const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const s = String(timeLeft%60).padStart(2,'0');
+  document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+function changeFontSize(delta){
+  fontSize = Math.min(22, Math.max(11, fontSize + delta));
+  document.getElementById('textpanel').style.fontSize = fontSize + 'px';
+  document.querySelector("#textpanel p").style.fontSize = fontSize + "px";
+}
+
+function toggleMarking(){
+  markingOn = !markingOn;
+  const btn = document.getElementById('markBtn');
+  btn.classList.toggle('active', markingOn);
+}
+
+function handleTextpanelMouseUp(){
+  if(!markingOn) return;
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  const tp = document.getElementById('textpanel');
+  if(!tp.contains(range.commonAncestorContainer)) return;
+  if(range.toString().trim() === '') { sel.removeAllRanges(); return; }
+  try{
+    const mark = document.createElement('mark');
+    mark.className = 'hl';
+    range.surroundContents(mark);
+  }catch(e){}
+  sel.removeAllRanges();
+}
+
+document.addEventListener('click', function(e){
+  const mark = e.target.closest('mark.hl');
+  if(mark){
+    const parent = mark.parentNode;
+    while(mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    parent.normalize();
+  }
+});
+
+buildExercise();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Digitaler TestDaF – Lesen</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f3f6f8;
+    color: #183247;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #116b8b, #1685a5);
+    color: white;
+    padding: 42px 20px 55px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 38px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.header p {
+    font-size: 17px;
+    opacity: 0.92;
+}
+
+/* Main */
+.container {
+    max-width: 1050px;
+    margin: -30px auto 60px;
+    padding: 0 20px;
+}
+
+/* Intro card */
+.intro {
+    background: white;
+    border-radius: 18px;
+    padding: 28px 30px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    margin-bottom: 28px;
+}
+
+.intro h2 {
+    color: #116b8b;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.intro p {
+    color: #607381;
+    line-height: 1.7;
+}
+
+/* Task grid */
+.tasks {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+/* Task card */
+.task {
+    background: white;
+    border-radius: 16px;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    text-decoration: none;
+    color: #183247;
+    border: 1px solid #e3eaee;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
+}
+
+.task:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+    border-color: #1685a5;
+}
+
+/* Number */
+.number {
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 14px;
+    background: #e8f5f9;
+    color: #116b8b;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+/* Text */
+.task-content {
+    flex: 1;
+}
+
+.task-content h3 {
+    font-size: 19px;
+    margin-bottom: 6px;
+}
+
+.task-content p {
+    color: #7a8992;
+    font-size: 14px;
+}
+
+/* Arrow */
+.arrow {
+    font-size: 25px;
+    color: #1685a5;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: #89969d;
+    font-size: 13px;
+    margin-top: 35px;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+
+    .header {
+        padding: 30px 15px 45px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
+
+    .header p {
+        font-size: 15px;
+    }
+
+    .container {
+        padding: 0 14px;
+    }
+
+    .tasks {
+        grid-template-columns: 1fr;
+    }
+
+    .intro {
+        padding: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <h1>Digitaler TestDaF</h1>
+    <p>Lesen – Prüfungstraining (Modelltest 2)</p>
+</header>
+
+
+<main class="container">
+
+    <!-- INTRO -->
+    <section class="intro">
+        <h2>Lesen</h2>
+        <p>
+            Wählen Sie eine Aufgabe aus und beginnen Sie mit dem
+            Prüfungstraining. Die Aufgaben orientieren sich am Format
+            des digitalen TestDaF.
+        </p>
+    </section>
+
+
+    <!-- AUFGABEN -->
+    <section class="tasks">
+
+        <a class="task" href="/Lesen_M2/Lesen_AT1.2.html"
+   onclick="
+   localStorage.removeItem('Lesen_AT1.2');
+   localStorage.removeItem('Lesen_AT2.2');
+   localStorage.removeItem('Lesen_AT3.2');
+   localStorage.removeItem('Lesen_AT4.2');
+   localStorage.removeItem('Lesen_AT5.2');
+   localStorage.removeItem('Lesen_AT6.2');
+   localStorage.removeItem('Lesen_AT7.2');
+   ">
+    <div class="number">01</div>
+    <div class="task-content">
+        <h3>Lesen – Aufgabentyp 1</h3>
+        <p>Lückentext ergänzen</p>
+    </div>
+    <div class="arrow">›</div>
+</a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT2.2.html">
+            <div class="number">02</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 2</h3>
+                <p>Textabschnitte ordnen</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT3.2.html">
+            <div class="number">03</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 3</h3>
+                <p>Multiple-Choice</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT4.2.html">
+            <div class="number">04</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 4</h3>
+                <p>Sprachhandlungen zuordnen</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT5.2.html">
+            <div class="number">05</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 5</h3>
+                <p>Aussagen Kategorien zuordnen</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT6.2.html">
+            <div class="number">06</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 6</h3>
+                <p>Aussagen einem Begriffspaar zuordnen</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+
+        <a class="task" href="/Lesen_M2/Lesen_AT7.2.html">
+            <div class="number">07</div>
+            <div class="task-content">
+                <h3>Lesen – Aufgabentyp 7</h3>
+                <p>Fehler in Zusammenfassung erkennen</p>
+            </div>
+            <div class="arrow">›</div>
+        </a>
+
+    </section>
+
+
+    <div class="footer">
+        Digitaler TestDaF · DeutschMoment
+    </div>
+
+</main>
+
+</body>
+</html>
