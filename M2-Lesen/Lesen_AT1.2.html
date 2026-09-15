@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TestDaF Übung – Lückentext</title>
+    <style>
+      :root {
+        --primary: #0e6e8c;
+        --accent: #c8102e;
+        --bg-box: #dde3e8;
+      }
+      * {
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #f4f6f7;
+        color: #222;
+      }
+      .header {
+        background: var(--primary);
+        color: #fff;
+        padding: 14px 20px;
+        font-size: 22px;
+        font-weight: bold;
+        border-radius: 4px 4px 0 0;
+      }
+      .instructions {
+        background: #eaf1f4;
+        padding: 16px 20px;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .timer {
+        display: inline-block;
+        border: 2px solid var(--primary);
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        text-align: center;
+        line-height: 70px;
+        font-weight: bold;
+        color: var(--primary);
+        margin-top: 10px;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 10px 20px 0 20px;
+        background: #fff;
+      }
+      .toolbtn {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--primary);
+        background: #fff;
+        color: var(--primary);
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+      }
+      .toolbtn.small {
+        font-size: 12px;
+      }
+      .toolbtn.big {
+        font-size: 18px;
+      }
+      .toolbtn.active {
+        background: var(--primary);
+        color: #fff;
+      }
+      .main {
+        padding: 10px 20px 20px 20px;
+        background: #fff;
+      }
+      #textpanel {
+        max-width: 900px;
+        font-size: 15px;
+        line-height: 1.7;
+        position: relative;
+      }
+      #textpanel h3 {
+        color: var(--primary);
+      }
+      #textpanel p {
+        margin-bottom: 18px;
+      }
+      #textpanel mark.hl {
+        background: #fdea63;
+        cursor: pointer;
+        border-radius: 2px;
+      }
+      .gap {
+        display: inline-block;
+        min-width: 70px;
+        border-bottom: 2px solid var(--primary);
+        text-align: center;
+        cursor: pointer;
+        padding: 0 4px;
+        position: relative;
+        color: var(--primary);
+        font-weight: bold;
+      }
+      .gap.filled {
+        color: #222;
+        font-weight: normal;
+        border-bottom-style: solid;
+      }
+      .gap.correct {
+        border-bottom-color: green;
+        background: #e3f7e3;
+      }
+      .gap.wrong {
+        border-bottom-color: var(--accent);
+        background: #fbe4e7;
+      }
+      .dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #eee;
+        border: 1px solid #999;
+        display: flex;
+        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
+      }
+      .dropdown button {
+        border: none;
+        background: #eee;
+        padding: 8px 14px;
+        cursor: pointer;
+        font-size: 14px;
+        border-right: 1px solid #ccc;
+      }
+      .dropdown button:hover {
+        background: #ddd;
+      }
+      .dropdown button.clear {
+        background: var(--accent);
+        color: #fff;
+        font-weight: bold;
+        width: 34px;
+      }
+      .footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 20px;
+      }
+      button.action {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      button.action.secondary {
+        background: #888;
+      }
+      #result {
+        padding: 0 20px 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">LESEN – Aufgabentyp 1: Lückentext</div>
+
+    <div class="instructions">
+      Lesen Sie den Text.<br />
+      <strong
+        >Klicken Sie in die Lücken und entscheiden Sie, welches Wort
+        passt.</strong
+      ><br />
+      Für jede Lücke gibt es genau eine richtige Lösung.
+      <div class="timer" id="timer">04:10</div>
+    </div>
+
+    <div class="toolbar">
+      <button
+        class="toolbtn small"
+        onclick="changeFontSize(-1)"
+        title="Verkleinern"
+      >
+        A-
+      </button>
+      <button
+        class="toolbtn big"
+        onclick="changeFontSize(1)"
+        title="Vergrößern"
+      >
+        A+
+      </button>
+      <button
+        class="toolbtn"
+        id="markBtn"
+        onclick="toggleMarking()"
+        title="Markieren"
+      >
+        ✎
+      </button>
+    </div>
+
+    <div class="main">
+      <div id="textpanel"></div>
+    </div>
+
+    <div id="result"></div>
+
+    <div class="footer">
+      <button class="action secondary" onclick="resetExercise()">
+        Zurücksetzen
+      </button>
+
+      <button class="action" onclick="checkAnswers()">Prüfen</button>
+
+      <button class="action" onclick="saveAndGoToNext()">Weiter</button>
+    </div>
+
+    <script>
+      /* ============================================================
+   HIER ANPASSEN: Neue Übung = Titel, Text und Lücken ersetzen.
+   Im Text markieren Sie jede Lücke mit [[1]], [[2]], usw.
+   gaps: Reihenfolge muss zur Nummerierung im Text passen.
+   correct = Index der richtigen Option (0=a,1=b,2=c,3=d)
+   ============================================================ */
+      const textTitle =
+        "Bäume als natürliche Klimaanlage";
+
+      const textHTML = `
+<p>Dass Bäume Städte im Sommer angenehmer machen können, ist seit Langem bekannt. Ihre Wirkung beschränkt sich jedoch nicht darauf, Schatten zu spenden. Wissenschaftler untersuchen zunehmend, in welchem Maß städtische Vegetation dazu beitragen kann, die Temperaturen in dicht bebauten Gebieten zu senken. Dabei [[1]] Bäume keineswegs nur als dekorative Elemente des Stadtbildes, sondern als Bestandteil einer natürlichen Klimaregulierung.</p>
+
+<p>Eine entscheidende Rolle spielt die sogenannte Verdunstungskühlung. Über ihre Blätter geben Bäume Wasser an die Umgebung ab. Für diesen Vorgang wird Energie benötigt, die der unmittelbaren Umgebung in Form von Wärme [[2]] wird. Dadurch kann sich die Temperatur in der näheren Umgebung eines Baumes deutlich verringern. Wie stark dieser Effekt ausfällt, hängt allerdings von verschiedenen Faktoren ab, etwa von der Baumart, der Größe der Krone und der verfügbaren Wassermenge.</p>
+
+<p>Besonders interessant ist, dass Bäume gleichzeitig die Luftqualität beeinflussen können. Ihre Blätter sind in der Lage, bestimmte Schadstoffe aus der Luft [[3]] . Allerdings bedeutet dies nicht, dass möglichst viele Bäume automatisch zu einer besseren Luftqualität führen. In engen Straßenschluchten kann eine dichte Vegetation unter Umständen sogar den Luftaustausch [[4]] , sodass sich Schadstoffe länger in Bodennähe halten.</p>
+
+<p>Die Wirkung städtischer Bäume muss daher differenziert betrachtet werden. Entscheidend ist nicht allein die Anzahl der gepflanzten Bäume, sondern auch deren [[5]] in das gesamte städtische Umfeld. Eine gezielte Begrünung, die klimatische Bedingungen, Verkehrsaufkommen und Bebauungsstruktur berücksichtigt, kann wesentlich wirksamer sein als eine bloße Vermehrung der Grünflächen.</p>
+`;
+
+      const gaps = [
+  {
+    options: ["erscheinen", "gelten", "befinden", "erweisen"],
+    correct: 1,
+  },
+  {
+    options: ["entzogen", "entlassen", "entfernt", "ausgelöst"],
+    correct: 0,
+  },
+  {
+    options: ["aufzunehmen", "einzunehmen", "anzunehmen", "überzunehmen"],
+    correct: 0,
+  },
+  {
+    options: ["verhindern", "unterbinden", "behindern", "aufhalten"],
+    correct: 2,
+  },
+  {
+    options: ["Einfügung", "Einleitung", "Einsetzung", "Einbindung"],
+    correct: 3,
+  },
+];
+      /* ============================================================ */
+
+      let userAnswers = new Array(gaps.length).fill(null);
+      let timeLeft = 250;
+      let timerInterval;
+      let fontSize = 16;
+      let markingOn = false;
+      let openDropdownGap = null;
+
+      function buildExercise() {
+        const tp = document.getElementById("textpanel");
+        let html = `<h3>${textTitle}</h3>` + textHTML;
+        html = html.replace(/\[\[(\d+)\]\]/g, (m, num) => {
+          const idx = parseInt(num) - 1;
+          return `<span class="gap" data-gap="${idx}" onclick="toggleDropdown(event, ${idx})">____</span>`;
+        });
+        tp.innerHTML = html;
+
+        fontSize = 16;
+        tp.style.fontSize = fontSize + "px";
+        markingOn = false;
+        document.getElementById("markBtn").classList.remove("active");
+        tp.onmouseup = handleTextpanelMouseUp;
+
+        userAnswers = new Array(gaps.length).fill(null);
+        gaps.forEach((g, i) => {
+          const span = tp.querySelector(`.gap[data-gap="${i}"]`);
+          span.textContent = "____";
+          span.classList.remove("filled", "correct", "wrong");
+        });
+
+        document.getElementById("result").textContent = "";
+        startTimer();
+      }
+
+      function closeAnyDropdown() {
+        const existing = document.querySelector(".dropdown");
+        if (existing) existing.remove();
+        openDropdownGap = null;
+      }
+
+      function toggleDropdown(e, idx) {
+        e.stopPropagation();
+
+        if (openDropdownGap === idx) {
+          closeAnyDropdown();
+          return;
+        }
+        closeAnyDropdown();
+        openDropdownGap = idx;
+
+        const span = e.currentTarget;
+        const dd = document.createElement("div");
+        dd.className = "dropdown";
+
+        const clearBtn = document.createElement("button");
+        clearBtn.className = "clear";
+        clearBtn.textContent = "x";
+        clearBtn.onclick = (ev) => {
+          ev.stopPropagation();
+          setGapAnswer(idx, null);
+          closeAnyDropdown();
+        };
+        dd.appendChild(clearBtn);
+
+        gaps[idx].options.forEach((opt, oi) => {
+          const b = document.createElement("button");
+          b.textContent = opt;
+          b.onclick = (ev) => {
+            ev.stopPropagation();
+            setGapAnswer(idx, oi);
+            closeAnyDropdown();
+          };
+          dd.appendChild(b);
+        });
+
+        span.appendChild(dd);
+      }
+
+      function setGapAnswer(idx, oi) {
+        userAnswers[idx] = oi;
+        const span = document.querySelector(`.gap[data-gap="${idx}"]`);
+        span.classList.remove("correct", "wrong");
+        if (oi === null) {
+          span.textContent = "____";
+          span.classList.remove("filled");
+        } else {
+          span.textContent = gaps[idx].options[oi];
+          span.classList.add("filled");
+        }
+      }
+
+      document.addEventListener("click", closeAnyDropdown);
+
+      function saveAndGoToNext() {
+        let score = 0;
+
+        gaps.forEach((g, idx) => {
+          if (userAnswers[idx] === g.correct) {
+            score++;
+          }
+        });
+
+        localStorage.setItem("Lesen_AT1.2", score);
+
+        window.location.href = "Lesen_AT2.2.html";
+      }
+
+      function checkAnswers() {
+        clearInterval(timerInterval);
+        let score = 0;
+        gaps.forEach((g, idx) => {
+          const span = document.querySelector(`.gap[data-gap="${idx}"]`);
+          span.classList.remove("correct", "wrong");
+          if (userAnswers[idx] === g.correct) {
+            span.classList.add("correct");
+            score++;
+          } else {
+            span.classList.add("wrong");
+          }
+        });
+        const resultEl = document.getElementById("result");
+
+        localStorage.setItem("Lesen_AT1", score);
+
+        resultEl.style.color =
+          score === gaps.length ? "green" : "var(--accent)";
+        resultEl.textContent = `Ergebnis: ${score} von ${gaps.length} richtig.`;
+      }
+
+      function resetExercise() {
+        clearInterval(timerInterval);
+        timeLeft = 250;
+        buildExercise();
+      }
+
+      function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 250;
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay();
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            checkAnswers();
+          }
+        }, 1000);
+      }
+
+      function updateTimerDisplay() {
+        const m = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+        const s = String(timeLeft % 60).padStart(2, "0");
+        document.getElementById("timer").textContent = `${m}:${s}`;
+      }
+
+      function changeFontSize(delta) {
+        fontSize = Math.min(24, Math.max(12, fontSize + delta));
+        document.getElementById("textpanel").style.fontSize = fontSize + "px";
+      }
+
+      function toggleMarking() {
+        markingOn = !markingOn;
+        const btn = document.getElementById("markBtn");
+        btn.classList.toggle("active", markingOn);
+        closeAnyDropdown();
+      }
+
+      function handleTextpanelMouseUp() {
+        if (!markingOn) return;
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        const tp = document.getElementById("textpanel");
+        if (!tp.contains(range.commonAncestorContainer)) return;
+        if (range.toString().trim() === "") {
+          sel.removeAllRanges();
+          return;
+        }
+        try {
+          const mark = document.createElement("mark");
+          mark.className = "hl";
+          range.surroundContents(mark);
+        } catch (e) {}
+        sel.removeAllRanges();
+      }
+
+      document.addEventListener("click", function (e) {
+        const mark = e.target.closest("mark.hl");
+        if (mark) {
+          const parent = mark.parentNode;
+          while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+          parent.removeChild(mark);
+          parent.normalize();
+        }
+      });
+
+      window.addEventListener("load", () => {
+        buildExercise();
+      });
+    </script>
+  </body>
+</html>
