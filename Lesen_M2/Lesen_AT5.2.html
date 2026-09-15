@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TestDaF Übung – Aussagen zuordnen</title>
+<style>
+  :root{
+    --primary:#0e6e8c;
+    --accent:#c8102e;
+  }
+  *{box-sizing:border-box; font-family: Arial, Helvetica, sans-serif;}
+  body{margin:0; padding:20px; background:#f4f6f7; color:#222;}
+  .header{background:var(--primary); color:#fff; padding:14px 20px; font-size:22px; font-weight:bold; border-radius:4px 4px 0 0;}
+  .instructions{background:#eaf1f4; padding:16px 20px; font-size:15px; line-height:1.5;}
+  .timer{display:inline-block; border:2px solid var(--primary); border-radius:50%; width:70px; height:70px; text-align:center; line-height:70px; font-weight:bold; color:var(--primary); margin-top:10px;}
+  .toolbar{display:flex; justify-content:flex-end; gap:8px; padding:10px 20px 0 20px; background:#fff;}
+  .toolbtn{width:38px; height:38px; border:1px solid var(--primary); background:#fff; color:var(--primary); border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px;}
+  .toolbtn.small{font-size:12px;}
+  .toolbtn.big{font-size:18px;}
+  .toolbtn.active{background:var(--primary); color:#fff;}
+  .main{display:flex; gap:24px; padding:10px 20px 20px 20px; background:#fff;}
+  .textpanel{flex:1; max-height:600px; overflow-y:auto; padding-right:10px; border-right:1px solid #ccc; font-size:15px; line-height:1.6;}
+  .textpanel h3{color:var(--primary);}
+  .textpanel p{margin-bottom:14px;}
+  mark.hl{
+    background:#fdea63;
+    cursor:pointer;
+    border-radius:2px;
+}
+  .tablepanel{flex:1.4;}
+  table{width:100%; border-collapse:collapse; font-size:15px;}
+  th{text-align:center; padding:8px 6px; background:#f0f3f5; border-bottom:2px solid var(--primary); color:var(--primary);}
+  td{text-align:center; padding:10px 6px; border-bottom:1px solid #ddd;}
+  td.stmt{text-align:left; font-weight:normal;}
+  tr:nth-child(even) td{background:#f7f9fa;}
+  input[type=radio]{width:16px; height:16px; cursor:pointer;}
+  td.correct{background:#e3f7e3 !important;}
+  td.wrong{background:#fbe4e7 !important;}
+  .footer{display:flex; justify-content:flex-end; gap:10px; padding:16px 20px;}
+  button.action{background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:4px; font-size:15px; cursor:pointer;}
+  button.action.secondary{background:#888;}
+  #result{padding:0 20px 20px; font-weight:bold;}
+  .textpanel mark.hl{
+    background:#fdea63;
+    cursor:pointer;
+    border-radius:2px;
+}
+
+th.markable{
+    cursor:text;
+}
+</style>
+</head>
+<body>
+
+<div class="header">LESEN – Aufgabentyp 5: Aussagen zuordnen</div>
+
+<div class="instructions">
+  Lesen Sie den Text.<br>
+  <strong>Ordnen Sie die Aussagen 1–7 zu.</strong> Entscheiden Sie für jede Aussage, welcher Kategorie sie entspricht.<br>
+  Es kann auch sein, dass einzelne Aussagen gar nicht passen.<br>
+  Für jede Aussage gibt es genau eine richtige Lösung.
+  <div class="timer" id="timer">09:10</div>
+</div>
+
+<div class="toolbar">
+  <button class="toolbtn small" onclick="changeFontSize(-1)" title="Verkleinern">A-</button>
+  <button class="toolbtn big" onclick="changeFontSize(1)" title="Vergrößern">A+</button>
+  <button class="toolbtn" id="markBtn" onclick="toggleMarking()" title="Markieren">✎</button>
+</div>
+
+<div class="main">
+  <div class="textpanel" id="textpanel"></div>
+  <div class="tablepanel" id="tablepanel"></div>
+</div>
+
+<div class="footer">
+
+  <button class="action secondary" onclick="resetExercise()">
+    Zurücksetzen
+  </button>
+
+  <button class="action" onclick="checkAnswers()">
+    Prüfen
+  </button>
+
+  <button class="action" onclick="saveAT5AndGoToNext()">Weiter</button>
+</div>
+<div id="result"></div>
+
+<script>
+/* ============================================================
+   HIER ANPASSEN: Titel, Absätze, Spalten (Kategorien) und
+   Aussagen mit dem Index der richtigen Kategorie (0-basiert,
+   entsprechend der Reihenfolge in "columns").
+   ============================================================ */
+const textTitle = "Leben unter der Erde";
+
+const paragraphs = [
+"In vielen Großstädten wird der Platz knapp. Straßen, Wohnungen, Büros und Grünflächen konkurrieren um dieselben Flächen. Deshalb beschäftigen sich Stadtplaner zunehmend mit der Frage, ob bestimmte Bereiche des städtischen Lebens unter die Erde verlagert werden könnten. Unterirdische Einkaufszentren, Verkehrswege oder Lagerräume existieren bereits in verschiedenen Städten. Einige Experten sehen darin eine Möglichkeit, oberirdisch mehr Platz für andere Zwecke zu schaffen.",
+
+"Befürworter unterirdischer Stadtbereiche verweisen vor allem auf die bessere Nutzung des vorhandenen Raums. Verkehrswege könnten unter die Erde verlegt werden, während an der Oberfläche neue Grünflächen entstehen. Außerdem sind unterirdische Räume besser vor extremen Wetterbedingungen geschützt. In Regionen mit sehr heißen Sommern oder besonders kalten Wintern könnte dies ein zusätzlicher Vorteil sein.",
+
+"Kritiker bezweifeln jedoch, dass sich dieses Konzept problemlos auf größere Teile einer Stadt übertragen lässt. Der Bau unterirdischer Anlagen ist technisch anspruchsvoll und häufig deutlich teurer als vergleichbare Bauprojekte an der Oberfläche. Hinzu kommen Fragen der Belüftung, Beleuchtung und Sicherheit. Auch psychologische Faktoren spielen eine Rolle: Nicht jeder Mensch fühlt sich in geschlossenen Räumen ohne natürlichen Lichteinfall wohl.",
+
+"Allerdings sehen selbst einige Kritiker durchaus sinnvolle Einsatzmöglichkeiten. Unterirdische Räume könnten beispielsweise für technische Infrastruktur oder die Lagerung bestimmter Güter genutzt werden, wo ein Aufenthalt von Menschen nicht ständig erforderlich ist. Eine vollständige Verlagerung des städtischen Lebens nach unten halten sie dagegen für unrealistisch.",
+
+"Auch die Befürworter räumen ein, dass unterirdische Lösungen nicht für jede Stadt geeignet sind. Geologische Bedingungen, der Grundwasserspiegel und die bereits vorhandene Infrastruktur können die Umsetzung erheblich erschweren. Dennoch sind sie der Meinung, dass die technischen Möglichkeiten noch längst nicht ausgeschöpft sind.",
+
+"Die Debatte zeigt damit, dass unterirdische Stadtplanung weder als allgemeine Lösung für Platzprobleme noch als grundsätzlich ungeeignet betrachtet werden sollte. Entscheidend ist vielmehr, für welchen Zweck, an welchem Ort und unter welchen Bedingungen solche Räume eingesetzt werden.",
+
+];
+
+const columns = ["Befürworter", "Kritiker", "Beide", "passt nicht"];
+
+const statements = [
+  { text:"Sie sehen neue Nutzungsmöglichkeiten.", correct:0 },
+  { text:"Sie halten die Kosten für unproblematisch.", correct:3 },
+  { text:"Sie erkennen mögliche Nachteile an.", correct:2 },
+  { text:"Sie befürworten eine vollständige Verlagerung nach unten.", correct:3 },
+  { text:"Sie nennen technische Probleme.", correct:1 },
+  { text:"Sie halten bestimmte Anwendungen für sinnvoll.", correct:2 },
+  { text:"Sie lehnen unterirdische Räume grundsätzlich ab.", correct:3 }
+];
+/* ============================================================ */
+
+let timeLeft = 550;
+let timerInterval;
+let fontSize = 15;
+let markingOn = false;
+
+function buildExercise(){
+  const tp = document.getElementById('textpanel');
+  tp.innerHTML = `<h3>${textTitle}</h3>` + paragraphs.map(p=>`<p>${p}</p>`).join('');
+  tp.onmouseup = handleTextpanelMouseUp;
+document.getElementById('tablepanel').onmouseup = handleTextpanelMouseUp;
+  fontSize = 15;
+  tp.style.fontSize = fontSize + 'px';
+  markingOn = false;
+  document.getElementById('markBtn').classList.remove('active');
+
+  const container = document.getElementById('tablepanel');
+  let html = '<table><thead><tr><th style="text-align:left;">Nr.</th><th style="text-align:left;">Aussage</th>';
+  columns.forEach((c, ci)=> {
+    html += `<th class="${ci < 2 ? 'markable' : ''}">${c}</th>`;
+});
+  html += '</tr></thead><tbody>';
+  statements.forEach((s, si)=>{
+    html += `<tr><td>${si+1}</td><td class="stmt">${s.text}</td>`;
+    columns.forEach((c, ci)=>{
+      html += `<td id="cell-${si}-${ci}"><input type="radio" name="q${si}" value="${ci}" onclick="selectAnswer(${si})"></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  document.getElementById('result').textContent = '';
+  startTimer();
+}
+
+function selectAnswer(si){
+  // clear previous highlight state for this row (in case user changes answer after checking)
+  document.querySelectorAll(`td[id^="cell-${si}-"]`).forEach(td=>{
+    td.classList.remove('correct','wrong');
+  });
+}
+
+function saveAT5AndGoToNext(){
+  let score = 0;
+
+  statements.forEach((s, si)=>{
+    const selected = document.querySelector(
+      `input[name="q${si}"]:checked`
+    );
+
+    const selVal = selected ? parseInt(selected.value) : null;
+
+    if(selVal === s.correct){
+      score++;
+    }
+  });
+
+  localStorage.setItem("Lesen_AT5.2", score);
+
+  window.location.href = "Lesen_AT6.2.html";
+}
+
+function checkAnswers(){
+  clearInterval(timerInterval);
+  let score = 0;
+  statements.forEach((s, si)=>{
+    const selected = document.querySelector(`input[name="q${si}"]:checked`);
+    const selVal = selected ? parseInt(selected.value) : null;
+    document.querySelectorAll(`td[id^="cell-${si}-"]`).forEach(td=> td.classList.remove('correct','wrong'));
+    const correctCell = document.getElementById(`cell-${si}-${s.correct}`);
+    if(selVal === s.correct){
+      correctCell.classList.add('correct');
+      score++;
+    } else {
+      correctCell.classList.add('correct');
+      if(selVal !== null){
+        document.getElementById(`cell-${si}-${selVal}`).classList.add('wrong');
+      }
+    }
+  });
+  const resultEl = document.getElementById('result');
+
+  resultEl.style.color = score === statements.length ? 'green' : 'var(--accent)';
+  resultEl.textContent = `Ergebnis: ${score} von ${statements.length} richtig.`;
+}
+
+function resetExercise(){
+  clearInterval(timerInterval);
+  timeLeft = 550;
+  buildExercise();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = 550;
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      checkAnswers();
+    }
+  },1000);
+}
+
+function updateTimerDisplay(){
+  const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const s = String(timeLeft%60).padStart(2,'0');
+  document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+function changeFontSize(delta){
+  fontSize = Math.min(22, Math.max(11, fontSize + delta));
+  document.getElementById('textpanel').style.fontSize = fontSize + 'px';
+}
+
+function toggleMarking(){
+  markingOn = !markingOn;
+  const btn = document.getElementById('markBtn');
+  btn.classList.toggle('active', markingOn);
+}
+
+function handleTextpanelMouseUp(){
+  if(!markingOn) return;
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  const tp = document.getElementById('textpanel');
+  const allowed =
+    document.getElementById('textpanel').contains(range.commonAncestorContainer) ||
+    document.getElementById('tablepanel').contains(range.commonAncestorContainer);
+if(!allowed) return;
+  if(range.toString().trim() === '') { sel.removeAllRanges(); return; }
+  try{
+    const mark = document.createElement('mark');
+    mark.className = 'hl';
+    range.surroundContents(mark);
+  }catch(e){}
+  sel.removeAllRanges();
+}
+
+document.addEventListener('click', function(e){
+  const mark = e.target.closest('mark.hl');
+  if(mark){
+    const parent = mark.parentNode;
+    while(mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    parent.normalize();
+  }
+});
+
+buildExercise();
+</script>
+
+</body>
+</html>

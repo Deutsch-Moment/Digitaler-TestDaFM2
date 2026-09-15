@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TestDaF – Ergebnis Lesen</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f6f8;
+            color: #183247;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #116b8b, #1685a5);
+            color: white;
+            padding: 42px 20px 55px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 17px;
+            opacity: 0.92;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: -30px auto 60px;
+            padding: 0 20px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .result-title {
+            color: #116b8b;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .result-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: 35px;
+            align-items: center;
+        }
+
+        .result-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-item span {
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .result-item strong {
+            font-size: 28px;
+        }
+
+        .points-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .points-number {
+            white-space: nowrap;
+        }
+
+        .points-number strong {
+            font-size: 32px;
+            color: #111;
+        }
+
+        .points-number small {
+            font-size: 20px;
+        }
+
+        .points-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 16px);
+            grid-template-rows: repeat(2, 16px);
+            gap: 4px;
+        }
+
+        .point-box {
+            width: 16px;
+            height: 16px;
+            background: #d9dee1;
+        }
+
+        .point-box.active {
+            background: #1685a5;
+        }
+
+        .items-result {
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid #e3eaee;
+            font-size: 16px;
+        }
+
+        .items-result strong {
+            color: #116b8b;
+            font-size: 22px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #89969d;
+            font-size: 13px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 700px) {
+
+            .result-box {
+                grid-template-columns: 1fr;
+            }
+
+            .points-content {
+                flex-wrap: wrap;
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>Digitaler TestDaF</h1>
+        <p>Ergebnis – Prüfungsteil Lesen</p>
+    </header>
+
+
+    <main class="container">
+
+        <section class="result-card">
+
+            <h2 class="result-title">Ergebnis</h2>
+
+            <div class="result-box">
+
+                <div class="result-item">
+                    <span>PRÜFUNGSTEIL</span>
+                    <strong>Lesen</strong>
+                </div>
+
+                <div class="result-item">
+                    <span>NIVEAU</span>
+                    <strong id="tdnResult">–</strong>
+                </div>
+
+                <div class="result-item">
+                    <span>PUNKTE</span>
+
+                    <div class="points-content">
+
+                        <div class="points-number">
+                            <strong id="pointsResult">0</strong><small>/20</small>
+                        </div>
+
+                        <div id="pointsGrid" class="points-grid"></div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="items-result">
+                <span>Richtige Antworten: </span>
+                <strong id="itemsResult">0/34</strong>
+            </div>
+
+        </section>
+
+
+        <div class="footer">
+            Digitaler TestDaF · DeutschMoment
+        </div>
+
+    </main>
+
+
+    <script>
+
+        function showLesenResult() {
+
+            const scores = [
+    Math.min(Number(localStorage.getItem("Lesen_AT1.2")) || 0, 5),
+    Math.min(Number(localStorage.getItem("Lesen_AT2.2")) || 0, 4),
+    Math.min(Number(localStorage.getItem("Lesen_AT3.2")) || 0, 7),
+    Math.min(Number(localStorage.getItem("Lesen_AT4.2")) || 0, 4),
+    Math.min(Number(localStorage.getItem("Lesen_AT5.2")) || 0, 7),
+    Math.min(Number(localStorage.getItem("Lesen_AT6.2")) || 0, 4),
+    Math.min(Number(localStorage.getItem("Lesen_AT7.2")) || 0, 3)
+];
+
+            const correctItems = scores.reduce(
+                (sum, score) => sum + score,
+                0
+            );
+
+            console.log("AT1.2:", scores[0]);
+console.log("AT2.2:", scores[1]);
+console.log("AT3.2:", scores[2]);
+console.log("AT4.2:", scores[3]);
+console.log("AT5.2:", scores[4]);
+console.log("AT6.2:", scores[5]);
+console.log("AT7.2:", scores[6]);
+console.log("GESAMT:", correctItems);
+
+
+            let points = 0;
+let tdn = "–";
+
+if (correctItems >= 9 && correctItems <= 16) {
+    tdn = "TDN 3";
+    points = Math.round(
+        5 + (correctItems - 9) * 4 / 7
+    );
+}
+else if (correctItems >= 17 && correctItems <= 26) {
+    tdn = "TDN 4";
+    points = Math.round(
+        10 + (correctItems - 17) * 5 / 9
+    );
+}
+else if (correctItems >= 27 && correctItems <= 34) {
+    tdn = "TDN 5";
+    points = Math.round(
+        16 + (correctItems - 27) * 4 / 7
+    );
+}
+
+
+            document.getElementById("tdnResult").textContent = tdn;
+
+            document.getElementById("pointsResult").textContent = points;
+
+            document.getElementById("itemsResult").textContent =
+                correctItems + "/34";
+
+
+            const grid =
+                document.getElementById("pointsGrid");
+
+            grid.innerHTML = "";
+
+
+            for (let i = 1; i <= 20; i++) {
+
+                const box =
+                    document.createElement("div");
+
+                box.className = "point-box";
+
+                if (i <= points) {
+                    box.classList.add("active");
+                }
+
+                grid.appendChild(box);
+            }
+
+        }
+
+
+        showLesenResult();
+
+    </script>
+
+</body>
+
+</html>

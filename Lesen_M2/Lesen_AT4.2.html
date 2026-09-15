@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>TestDaF Übung – Zuordnung</title>
+<style>
+  :root{
+    --primary:#0e6e8c;
+    --accent:#c8102e;
+  }
+  *{box-sizing:border-box; font-family: Arial, Helvetica, sans-serif;}
+  body{margin:0; padding:20px; background:#f4f6f7; color:#222;}
+  .header{background:var(--primary); color:#fff; padding:14px 20px; font-size:22px; font-weight:bold; border-radius:4px 4px 0 0;}
+  .instructions{background:#eaf1f4; padding:16px 20px; font-size:15px; line-height:1.5;}
+  .timer{display:inline-block; border:2px solid var(--primary); border-radius:50%; width:70px; height:70px; text-align:center; line-height:70px; font-weight:bold; color:var(--primary); margin-top:10px;}
+  .toolbar{display:flex; justify-content:flex-end; gap:8px; padding:10px 20px 0 20px; background:#fff;}
+  .toolbtn{width:38px; height:38px; border:1px solid var(--primary); background:#fff; color:var(--primary); border-radius:4px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px;}
+  .toolbtn.small{font-size:12px;}
+  .toolbtn.big{font-size:18px;}
+  .toolbtn.active{background:var(--primary); color:#fff;}
+  .main{display:flex; gap:28px; padding:10px 20px 20px 20px; background:#fff;}
+  .textpanel{flex:1.2; font-size:15px; line-height:2; position:relative;}
+  .textpanel h3{color:var(--primary); font-size:16px; margin-top: 0; line-height: 1;}
+  .textpanel p{margin-bottom:16px;}
+  .textpanel mark.hl{background:#fdea63; cursor:pointer; border-radius:2px;}
+  .statementpanel{flex:1;}
+  .stmt-row{display:flex; align-items:center; gap:12px; margin-bottom:14px; font-size:14px;}
+  .slot{width:34px; height:34px; flex:0 0 34px; border:2px dashed var(--primary); border-radius:4px; display:flex; align-items:center; justify-content:center; background:#eef3f5;}
+  .slot.filled{border-style:solid;}
+  .slot.correct{border-color:green; background:#e3f7e3;}
+  .slot.wrong{border-color:var(--accent); background:#fbe4e7;}
+  .chip{width:26px; height:26px; background:#c9d6dc; border:1px solid var(--primary); border-radius:3px; display:flex; align-items:center; justify-content:center; font-weight:bold; color:var(--primary); cursor:grab; font-size:13px;}
+  .chip.dragging{opacity:0.4;}
+  .home-slot{display:inline-flex; width:26px; height:26px; border:2px dashed var(--primary); border-radius:3px; vertical-align:middle; margin:0 3px; align-items:center; justify-content:center; background:#eef3f5;}
+  .footer{display:flex; justify-content:flex-end; gap:10px; padding:16px 20px;}
+  button.action{background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:4px; font-size:15px; cursor:pointer;}
+  button.action.secondary{background:#888;}
+  #result{padding:0 20px 20px; font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="header">LESEN – Aufgabentyp 4: Zuordnung</div>
+
+<div class="instructions">
+  Lesen Sie den Text.<br>
+  <strong>Ordnen Sie die Textstellen 1–4 den Aussagen rechts zu.</strong><br>
+  Ziehen Sie dafür die Zahlen von links nach rechts.<br>
+  Die Zahlen beziehen sich immer auf den nachfolgenden Satz.<br>
+  Für jede Textstelle gibt es genau eine richtige Lösung.
+  <div class="timer" id="timer">06:10</div>
+</div>
+
+<div class="toolbar">
+  <button class="toolbtn small" onclick="changeFontSize(-1)" title="Verkleinern">A-</button>
+  <button class="toolbtn big" onclick="changeFontSize(1)" title="Vergrößern">A+</button>
+  <button class="toolbtn" id="markBtn" onclick="toggleMarking()" title="Markieren">✎</button>
+</div>
+
+<div class="main">
+  <div class="textpanel" id="textpanel"></div>
+  <div class="statementpanel" id="statementpanel"></div>
+</div>
+
+<div class="footer">
+
+  <button class="action secondary" onclick="resetExercise()">
+    Zurücksetzen
+  </button>
+
+  <button class="action" onclick="checkAnswers()">
+    Prüfen
+  </button>
+
+  <button class="action" onclick="saveAT4AndGoToNext()">Weiter</button>
+</div>
+<div id="result"></div>
+
+<script>
+/* ============================================================
+   HIER ANPASSEN: Titel, Text (mit [[1]]..[[n]] an den Stellen,
+   wo die Zahlen erscheinen sollen), Aussagen (a, b, c, ...)
+   und die Lösung (welche Zahl zu welchem Buchstaben gehört).
+   Es dürfen mehr Aussagen als Zahlen vorhanden sein (Distraktoren).
+   ============================================================ */
+const textTitle = "Kommentar einer Expertin zur Plastikverschmutzung";
+
+const textHTML = `
+
+<p>Die Diskussion über Plastik wird häufig von der Vorstellung geprägt, dass Kunststoff grundsätzlich ein Problem sei und deshalb möglichst vollständig ersetzt werden müsse. Diese Sichtweise greift jedoch zu kurz. Kunststoff ist leicht, langlebig und vielseitig einsetzbar und kann in bestimmten Bereichen sogar dazu beitragen, Ressourcen einzusparen. [[1]] Entscheidend ist daher weniger, ob ein Produkt aus Kunststoff besteht, sondern vielmehr, wie es hergestellt, verwendet und anschließend entsorgt wird.</p>
+
+<p>Ein häufig genanntes Gegenargument lautet, dass biologisch abbaubare Materialien automatisch umweltfreundlicher seien. [[2]] Auch solche Materialien benötigen für ihre Herstellung Rohstoffe und Energie und können unter ungünstigen Bedingungen ähnliche ökologische Probleme verursachen wie herkömmliche Kunststoffe. Ihre Umweltbilanz hängt deshalb ebenfalls von den konkreten Produktions- und Entsorgungsbedingungen ab.</p>
+
+<p>Allerdings lässt sich daraus nicht ableiten, dass die gegenwärtige Verwendung von Kunststoff unproblematisch wäre. Ein großer Teil der weltweit produzierten Kunststoffprodukte wird nur kurze Zeit verwendet, während das Material anschließend über Jahrzehnte oder sogar länger in der Umwelt verbleiben kann. [[3]] Wenn es uns gelingt, Produkte länger zu nutzen, wiederzuverwenden und effizienter zu recyceln, könnten wir den Bedarf an neu produziertem Kunststoff erheblich reduzieren.</p>
+
+<p>Besonders problematisch ist aus meiner Sicht die weit verbreitete Erwartung, technologische Innovationen würden das Problem irgendwann von selbst lösen. Neue Recyclingverfahren können zwar einen wichtigen Beitrag leisten, doch [[4]] allein mit technischen Lösungen werden wir das Problem der Plastikverschmutzung wahrscheinlich nicht bewältigen. Notwendig sind ebenso Veränderungen im Konsumverhalten, geeignete politische Rahmenbedingungen und wirtschaftliche Anreize.</p>
+
+`;
+
+const statements = [
+
+  { letter:"a", text:"Der Experte erklärt etwas." },
+
+  { letter:"b", text:"Die Expertin hofft auf etwas." },
+
+  { letter:"c", text:"Die Expertin prognostiziert etwas." },
+
+  { letter:"d", text:"Die Expertin räumt etwas ein." },
+
+  { letter:"e", text:"Die Expertin stellt etwas in Frage." },
+
+  { letter:"f", text:"Die Expertin vermutet etwas." },
+
+  { letter:"g", text:"Die Expertin verteidigt etwas." },
+
+  { letter:"h", text:"Der Experte widerspricht etwas." }
+
+];
+
+const solution = { 1:"g", 2:"d", 3:"b", 4:"h" };
+/* ============================================================ */
+
+const numbers = Object.keys(solution).map(Number);
+let slotContents = Object.create(null);
+let timeLeft = 370;
+let timerInterval;
+let fontSize = 15;
+let markingOn = false;
+let draggedNumber = null;
+
+function buildExercise(){
+  localStorage.removeItem("Lesen_AT4.2");
+  const tp = document.getElementById('textpanel');
+  let html = `<h3>${textTitle}</h3>` + textHTML;
+  html = html.replace(/\[\[(\d+)\]\]/g, (m, num)=>{
+    return `<span class="home-slot" data-slot="home-${num}" ondragover="event.preventDefault()" ondrop="onDrop(event,'home-${num}')"></span>`;
+  });
+  tp.innerHTML = html;
+  document.querySelector('.main').onmouseup = handleTextpanelMouseUp;
+
+  fontSize = 15;
+  tp.style.fontSize = fontSize + 'px';
+  markingOn = false;
+  document.getElementById('markBtn').classList.remove('active');
+
+  const sp = document.getElementById('statementpanel');
+  sp.innerHTML = '';
+  statements.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'stmt-row';
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.slot = 'target-' + s.letter;
+    slot.ondragover = (e)=>e.preventDefault();
+    slot.ondrop = (e)=>onDrop(e, 'target-'+s.letter);
+    slot.draggable = true;
+
+    slot.ondragstart = (e)=>{
+      const n = slotContents[slot.dataset.slot];
+      if(n !== undefined){
+        draggedNumber = n;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(n));
+      }
+    };
+
+    const label = document.createElement('div');
+    label.innerHTML = `<b>${s.letter})</b> ${s.text}`;
+    row.appendChild(slot);
+    row.appendChild(label);
+    sp.appendChild(row);
+  });
+
+  // مقداردهی درست به متغیر سراسری
+  slotContents = Object.create(null);
+  
+  // قرار دادن اعداد در خانه اصلی خودشان داخل متن
+  numbers.forEach(n => {
+    slotContents['home-' + n] = n;
+    placeChipInSlot(n, 'home-' + n);
+  });
+
+  document.getElementById('result').textContent = '';
+  startTimer();
+}
+
+
+function makeChip(n){
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = n;
+  chip.draggable = true;
+  chip.dataset.number = n;
+  chip.ondragstart = (e)=>{
+    draggedNumber = n;
+    chip.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', n);
+  };
+  chip.ondragend = ()=> chip.classList.remove('dragging');
+  return chip;
+}
+
+function findSlotOf(n){
+  for(const key in slotContents){
+    if(slotContents[key] === n) return key;
+  }
+  return null;
+}
+
+function placeChipInSlot(n, slotId){
+  const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
+  if(!slotEl) return;
+  slotEl.innerHTML = '';
+  slotEl.appendChild(makeChip(n));
+  slotEl.classList.add('filled');
+}
+
+function clearSlot(slotId){
+  const slotEl = document.querySelector(`[data-slot="${slotId}"]`);
+  if(!slotEl) return;
+  slotEl.innerHTML = '';
+  slotEl.classList.remove('filled','correct','wrong');
+}
+
+function onDrop(e, targetSlotId){
+    e.preventDefault();
+
+    let n = parseInt(e.dataTransfer.getData('text/plain'));
+
+    // اگر از سمت گزینه‌ها درگ شده باشد
+    if (isNaN(n)) {
+        const chip = e.target.closest('.chip');
+        if (chip) {
+            n = parseInt(chip.dataset.number);
+        }
+    }
+
+    if (isNaN(n)) return;
+
+    const oldSlotId = findSlotOf(n);
+
+    if (oldSlotId === targetSlotId) return;
+
+    const occupant = slotContents[targetSlotId];
+
+// اگر مقصد قبلاً پر است، هیچ جابه‌جایی انجام نشود
+if (occupant !== undefined) return;
+
+// شماره را از جای قبلی حذف کن
+if (oldSlotId !== null) {
+    slotContents[oldSlotId] = undefined;
+    clearSlot(oldSlotId);
+}
+
+    slotContents[targetSlotId] = n;
+    placeChipInSlot(n, targetSlotId);
+}
+
+function saveAT4AndGoToNext(){
+  let score = 0;
+
+  statements.forEach(s => {
+    const slotId = 'target-' + s.letter;
+    const placedNumber = slotContents[slotId];
+
+    // فقط در صورتی امتیاز را بررسی کن که کاربر عددی را در این خانه قرار داده باشد
+    if (placedNumber !== undefined) {
+      const expectedNumber = numbers.find(
+        n => solution[n] === s.letter
+      );
+
+      if (placedNumber === expectedNumber) {
+        score++;
+      }
+    }
+  });
+
+  localStorage.setItem("Lesen_AT4.2", score);
+  window.location.href = "Lesen_AT5.2.html";
+}
+
+
+function checkAnswers(){
+  clearInterval(timerInterval);
+
+  let score = 0;
+
+  statements.forEach(s => {
+
+    const slotId = 'target-' + s.letter;
+    const el = document.querySelector(`[data-slot="${slotId}"]`);
+
+    el.classList.remove('correct','wrong');
+
+    const placedNumber = slotContents[slotId];
+    const expectedNumber = numbers.find(
+      n => solution[n] === s.letter
+    );
+
+    // فقط اگر واقعاً جوابی قرار داده شده باشد بررسی کن
+    if (placedNumber !== undefined) {
+
+      if (placedNumber === expectedNumber) {
+        score++;
+        el.classList.add('correct');
+      } else {
+        el.classList.add('wrong');
+      }
+
+    }
+
+  });
+
+  localStorage.setItem("Lesen_AT4.2", score);
+
+  const resultEl = document.getElementById('result');
+
+  resultEl.style.color =
+    score === numbers.length ? 'green' : 'var(--accent)';
+
+  resultEl.textContent =
+    `Ergebnis: ${score} von ${numbers.length} richtig.`;
+}
+
+function resetExercise(){
+  clearInterval(timerInterval);
+  timeLeft = 370;
+  buildExercise();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft = 370;
+  updateTimerDisplay();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      checkAnswers();
+    }
+  },1000);
+}
+
+function updateTimerDisplay(){
+  const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const s = String(timeLeft%60).padStart(2,'0');
+  document.getElementById('timer').textContent = `${m}:${s}`;
+}
+
+function changeFontSize(delta){
+  fontSize = Math.min(22, Math.max(12, fontSize + delta));
+  document.getElementById('textpanel').style.fontSize = fontSize + 'px';
+}
+
+function toggleMarking(){
+  markingOn = !markingOn;
+  const btn = document.getElementById('markBtn');
+  btn.classList.toggle('active', markingOn);
+}
+
+function handleTextpanelMouseUp(){
+  if(!markingOn) return;
+  const sel = window.getSelection();
+  if(!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  const tp = document.querySelector('.main');
+  if(!tp.contains(range.commonAncestorContainer)) return;
+  if(range.toString().trim() === '') { sel.removeAllRanges(); return; }
+  try{
+    const mark = document.createElement('mark');
+    mark.className = 'hl';
+    range.surroundContents(mark);
+  }catch(e){}
+  sel.removeAllRanges();
+}
+
+document.addEventListener('click', function(e){
+  const mark = e.target.closest('mark.hl');
+  if(mark){
+    const parent = mark.parentNode;
+    while(mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+    parent.removeChild(mark);
+    parent.normalize();
+  }
+});
+
+buildExercise();
+</script>
+
+</body>
+</html>
